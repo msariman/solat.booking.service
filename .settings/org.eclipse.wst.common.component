@@ -2,7 +2,7 @@
     <wb-module deploy-name="com.sg.service">
         <wb-resource deploy-path="/" source-path="/WebRoot" tag="defaultRootSource"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src"/>
-        <property name="context-root" value="ws"/>
+        <property name="context-root" value="ws_dev"/>
         <property name="java-output-path" value="/com.sg.service/WebRoot/WEB-INF/classes"/>
     </wb-module>
 </project-modules>

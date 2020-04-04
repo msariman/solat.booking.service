@@ -27,7 +27,7 @@ import org.joda.time.format.DateTimeFormatter;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class masjid extends HttpServlet {
+public class Copy_dropDown_of_masjid extends HttpServlet {
 	//private static String dbUrl = "jdbc:mysql://mysql3000.mochahost.com/solatboo_solatbooking";
 	private static String dbUrl = "jdbc:mysql://mysql3000.mochahost.com/solatboo_dev";
 	private static String dbClass = "com.mysql.jdbc.Driver";
@@ -39,12 +39,11 @@ public class masjid extends HttpServlet {
 	public int daysDuration = 7;
 	public boolean updated = true;
 	String formatedSolatString = "";
-	String formatedSolatStringAdmin = "";
 	
     /**
      * @see HttpServlet#HttpServlet()
      */
-    public masjid() {
+    public Copy_dropDown_of_masjid() {
         super();
         if (visitCounter == null)
         	visitCounter = new JSONArray();
@@ -76,7 +75,7 @@ public class masjid extends HttpServlet {
 				} 
 				else if (action.equals("icLookup"))
 				{
-					String vIc = request.getParameter("vIc");
+					String vIc = request.getParameter("ic");
 					responses = icLookup(vIc);  
 				} 
 				else if (action.equals("booking") )
@@ -103,7 +102,6 @@ public class masjid extends HttpServlet {
 				{
 					int masjidId = Integer.parseInt(request.getParameter("masjidId"));
 					int solatId = Integer.parseInt(request.getParameter("solatId"));
-					int scheduleId = Integer.parseInt(request.getParameter("scheduleId"));
 					double bodyTemp = 0;
 					if (request.getParameter("temp")!="")
 					{
@@ -148,7 +146,7 @@ public class masjid extends HttpServlet {
 						visitorId=creds.getInt("visitorId");
 					 }
 					 
-					 updateVisit(scheduleId,masjidId,solatId,bodyTemp,visitorId,ic,age,name,phone,enterDate,leaveDate, solatDate);
+					 updateVisit(masjidId,solatId,bodyTemp,visitorId,ic,age,name,phone,enterDate,leaveDate, solatDate);
                      updated = true;
 				}
 		
@@ -278,10 +276,10 @@ public class masjid extends HttpServlet {
 				}
 				else if (action.equals("ml") )
 				{
-					  String admin = request.getParameter("admin");
 
 					if (updated == true || (formatedSolatString!=null && formatedSolatString.length()==0))
 					{
+						System.out.println("***** Reload *****");
 						formatedSolatString = "";
 						String solatDateString = request.getParameter("solatDate");
 						daysDuration = 7;
@@ -304,8 +302,8 @@ public class masjid extends HttpServlet {
 						
 					    solatDateString = format.format(selectedDate);
 					    solatDatePlusOneString = format.format(selectedDatePlusOne);
-					
-						String solatHeader =  "<a style=\"cursor:pointer;border: 1px solid #dddddd;padding-top: 20px;padding-bottom: 20px;\" class=\"bd-linkbutton-2  bd-button-15  bd-content-element\" onClick=\"clickModal(%d, %d,%d,'%s','%s','%s','%s','%s')\">%s -%s @%s Space Left: <b>(%d)</b></a>";
+					    String selectHeader = "<div class='solatContainer'><select class='solatSelect' onChange='this.value' id='solatChoice'>";
+						String solatHeader =  "<a class=\"solatListing\" onClick=\"clickModal(%d, %d,%d,'%s','%s','%s','%s','%s')\">%s -%s @%s Space Left: <b>(%d)</b></a>";
 						String solatHeaderWalkin =  "<a onClick=\"alert('%s')\">Walk-In Visit. Register Now and No reservation needed.<br> Maximum at one time: <b>(%d)</b></a>";
 						String solatHeaderClose =  "<span>%s -%s @%s - <b>Session FULL</b></span>";
 																			
@@ -324,7 +322,7 @@ public class masjid extends HttpServlet {
 							    JSONArray solatSchedule = new JSONArray();
 							    solatSchedule = getSolatList(masjidId,solatDateString,solatDatePlusOneString);
 							    //System.out.println(solatSchedule);
-							    solatListing = "";
+							    solatListing = selectHeader;//"";
 							    for (int j=0; j<solatSchedule.length(); j++) {
 								    	JSONObject solatItem = solatSchedule.getJSONObject(j);
 								    	int scheduleId = solatItem.getInt("scheduleId");
@@ -346,130 +344,31 @@ public class masjid extends HttpServlet {
 								    	
 								    	int solId = solatItem.getInt("solId");
 								    	
-								    	int currentCount = getVisitCount(masjidId,solId,scheduleId,solatDateString,solatDatePlusOneString);
+								    	int currentCount = getVisitCount(masjidId,solId,solatDateString,solatDatePlusOneString);
 								    	System.out.println("currentCount=" + currentCount);
 								    	System.out.println("maxVisitor=" + maxVisitor);
 								    	
 								    	String solatListingMain = solatListing;
 								    	if ((maxVisitor-currentCount)<1)
 								    	{
-								    		solatListing = solatListing + String.format(solatHeaderClose,solat,solatDate, solatTime) + "<br>";
+								    		//solatListing = solatListing + String.format(solatHeaderClose,solat,solatDate, solatTime) + "<br>";
 								    	} else 
 								    	{
-								    		solatListing = solatListing + String.format(solatHeader,scheduleId,masjidId,solId,solat, masjidName,solatTime,solatDate,solatType,solat,solatDate, solatTime, (maxVisitor-currentCount)) + "<br>";
+								    		solatListing = solatListing+ String.format("<option value='%d'>%s -%s @%s Space Left:&nbsp;(%d)</option>",scheduleId,solat,solatDate, solatTime, (maxVisitor-currentCount));
+								    		//solatListing = solatListing + String.format(solatHeader,scheduleId,masjidId,solId,solat, masjidName,solatTime,solatDate,solatType,solat,solatDate, solatTime, (maxVisitor-currentCount)) + "<br>";
 								    	}
 								    	if (solat.equalsIgnoreCase("Walk-In"))
 								    	{
-								    		solatListing = solatListingMain + String.format(solatHeaderWalkin,"Anytime Walk-In Visit. No Reservation Needed.\r\nYou may come in anytime.",maxVisitor) + "<br>";
+								    		//solatListing = solatListingMain + String.format(solatHeaderWalkin,"Anytime Walk-In Visit. No Reservation Needed.\r\nYou may come in anytime.",maxVisitor) + "<br>";
 								    	}
 								  }
-							    formatedSolatString = formatedSolatString + masjidLabel + "<br>" + solatListing + "<br>";
+							    solatListing = solatListing + "</select></div>";
+							    formatedSolatString = formatedSolatString + masjidLabel + "<br>" + solatListing  + "<br>";
 							    }
 							updated = false;
 						}
+					}
 					responses.put("masjid", formatedSolatString);
-					}
-				else if (action.equals("adm") )
-				{
-					  String admin = request.getParameter("admin");
-
-					if (updated == true || (formatedSolatStringAdmin!=null && formatedSolatStringAdmin.length()==0))
-					{
-						formatedSolatStringAdmin = "";
-						String solatDateString = request.getParameter("solatDate");
-						daysDuration = 7;
-						String daysStr = request.getParameter("days");
-						if(daysStr!=null)
-						   daysDuration = Integer.parseInt(daysStr);
-						SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-						String solatDatePlusOneString = null;
-					
-						if (solatDateString!=null || solatDateString!="")
-						{
-							solatDateString = format.format(new Date());
-						}
-						
-						Date selectedDate = format.parse(solatDateString);
-						Calendar c = Calendar.getInstance();
-						c.setTime(selectedDate);
-						c.add(Calendar.DATE, daysDuration);
-						Date selectedDatePlusOne = c.getTime();
-						
-					    solatDateString = format.format(selectedDate);
-					    solatDatePlusOneString = format.format(selectedDatePlusOne);
-					
-						String solatHeader =  "<a style=\"cursor:pointer;border: 1px solid #dddddd;padding-top: 20px;padding-bottom: 20px;\" class=\"bd-linkbutton-2  bd-button-15  bd-content-element\" onClick=\"clickModal(%d, %d,%d,'%s','%s','%s','%s','%s')\">%s -%s @%s Space Left: <b>(%d)</b></a>";
-						String solatHeaderWalkin =  "<a onClick=\"alert('%s')\">Walk-In Visit. Register Now and No reservation needed.<br> Maximum at one time: <b>(%d)</b></a>";
-						String solatHeaderClose =  "<span>%s -%s @%s - <b>Session FULL</b></span>";
-																			
-						String masjidHeader = "<span><b>%s</b></span>";
-						String masjidLabel = "";
-						
-						int mId = Integer.parseInt(request.getParameter("masjidId"));
-						// get the MASJID LIST FIRST
-						JSONArray masjids = getMasjidList(mId);
-							
-							for (int i=0; i<masjids.length(); i++) {
-							    JSONObject item = masjids.getJSONObject(i);
-							    int masjidId = item.getInt("id");
-							    String masjidName = item.getString("name");
-							    masjidLabel = String.format(masjidHeader,masjidName);  
-							    JSONArray solatSchedule = new JSONArray();
-							    solatSchedule = getSolatList(masjidId,solatDateString,solatDatePlusOneString);
-							    //System.out.println(solatSchedule);
-							    solatListing = "";
-							    for (int j=0; j<solatSchedule.length(); j++) {
-								    	JSONObject solatItem = solatSchedule.getJSONObject(j);
-								    	int scheduleId = solatItem.getInt("scheduleId");
-								    	int maxVisitor = solatItem.getInt("maxVisitor");
-								    	String solat = solatItem.getString("solat");
-								    	String solatTime = solatItem.getString("solatTime");
-								    	String solatType = solatItem.getString("solatType");
-								    	
-								        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
-								    	SimpleDateFormat dateFormat = new SimpleDateFormat("hh.mm aa");
-								    	Date dt = timeFormat.parse(solatTime);
-								    	solatTime = dateFormat.format(dt).toString();
-								    	
-								    	SimpleDateFormat dateFullFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-								    	String solatDate = solatItem.getString("solatDate");
-								    	dt = dateFullFormat.parse(solatDate);
-								    	SimpleDateFormat dateHalfFormat = new SimpleDateFormat("yyyy-MM-dd");
-								    	solatDate = dateHalfFormat.format(dt).toString();
-								    	
-								    	int solId = solatItem.getInt("solId");
-								    	
-								    	int currentCount = getVisitCount(masjidId,solId,scheduleId,solatDateString,solatDatePlusOneString);
-								    	System.out.println("currentCount=" + currentCount);
-								    	System.out.println("maxVisitor=" + maxVisitor);
-								    	
-								    	String solatListingMain = solatListing;
-								    	
-								    	if (solat.equalsIgnoreCase("Walk-In"))
-								    	{
-								    		dt = new Date();
-									    	solatTime = dateFormat.format(dt).toString();
-								    	}
-								    	
-								    	if ((maxVisitor-currentCount)<1)
-								    	{
-								    		solatListing = solatListing + String.format(solatHeaderClose,solat,solatDate, solatTime) + "<br>";
-								    	} else 
-								    	{
-								    		solatListing = solatListing + String.format(solatHeader,scheduleId,masjidId,solId,solat, masjidName,solatTime,solatDate,solatType,solat,solatDate, solatTime, (maxVisitor-currentCount)) + "<br>";
-								    	}
-								    	//if (solat.equalsIgnoreCase("Walk-In"))
-								    	//{
-								    	//	solatListing = solatListingMain + String.format(solatHeaderWalkin,"Anytime Walk-In Visit. No Reservation Needed.\r\nYou may come in anytime.",maxVisitor) + "<br>";
-								    	//}
-								  }
-							    formatedSolatStringAdmin = formatedSolatStringAdmin + masjidLabel + "<br>" + solatListing + "<br>";
-							    }
-							updated = false;
-						}
-					responses.put("masjid", formatedSolatStringAdmin);
-					}
-					
 		  
 		
 			} catch (Exception e) {
@@ -617,11 +516,10 @@ public class masjid extends HttpServlet {
     }
 
 	   
-    private int getVisitCount(int masjidId,int solatId,int scheduleId, String startDate,String endDate)
+    private int getVisitCount(int masjidId,int solatId, String startDate,String endDate)
     {
     	String sql = String.format("Select count(*) as count from visit " +  
-        		    " WHERE ( solatDate >= '%s' AND solatDate < '%s') and solatId=%d and " + 
-        		    " masjidId=%d and scheduleId=%d and (endDate IS NULL)",startDate,endDate,solatId,masjidId,scheduleId);
+        		    " WHERE ( solatDate >= '%s' AND solatDate < '%s') and solatId=%d and masjidId=%d",startDate,endDate,solatId,masjidId);
     	System.out.println(sql);
         	int count = 0;
             try {
@@ -702,7 +600,7 @@ public class masjid extends HttpServlet {
     	return success;
     }
     
-    private boolean updateVisit(int scheduleId, int masjidId,int solatId, double bodyTemp,int visitorId, String ic,
+    private boolean updateVisit(int masjidId,int solatId, double bodyTemp,int visitorId, String ic,
             int age, String name, String phone, String enterDate, String leaveDate, String solatDate)
     {
     	JSONObject creds = new JSONObject();
@@ -710,8 +608,8 @@ public class masjid extends HttpServlet {
     	String sql = String.format("UPDATE `visit`" +
     			" SET `startDate` = '%s', `endDate` = '%s'," +
     			" `bodyTemp` = '%f', `telephone` = '%s' " +
-    			" WHERE (`visitorId` = %d) and (`scheduleId` = %d) and (`solatId` = %d) and (`solatDate` = '%s');",
-    			enterDate,leaveDate,bodyTemp,phone,visitorId,scheduleId, solatId,solatDate);
+    			" WHERE (`visitorId` = %d) and (`solatId` = %d) and (`solatDate` = '%s');",
+    			enterDate,leaveDate,bodyTemp,phone,visitorId,solatId,solatDate);
 
     	System.out.println(sql);
     	try {
@@ -855,7 +753,7 @@ public class masjid extends HttpServlet {
             	if ((conn == null) || conn.isClosed())
         			this.connect();
             	
-            	Statement stmt = conn.createStatement();
+             	Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery(sql);
                 boolean success=false;
                 while (rs.next()) {
